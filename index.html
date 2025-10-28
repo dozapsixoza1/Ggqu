@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biscvid — Чат Менеджер</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at center, #fff8e1, #ffe0b2, #ffb74d);
+      color: #333;
+    }
+
+    /* === АНИМАЦИЯ ФОНА (ЧАСТИЦЫ) === */
+    canvas#particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* === ЭКРАН ЗАГРУЗКИ === */
+    .loader {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #ffb74d, #ffa726, #ff9800);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 100;
+      animation: fadeOut 1.5s ease 3.5s forwards;
+    }
+
+    .loader span {
+      color: white;
+      font-weight: bold;
+      font-size: 2em;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px #fff, 0 0 30px #ffeb3b;
+      animation: pulse 1.2s infinite alternate;
+    }
+
+    @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+    @keyframes pulse { from { opacity: 0.6; transform: scale(0.9);} to { opacity: 1; transform: scale(1.1);} }
+
+    /* === ЛОГОТИП === */
+    .logo {
+      position: relative;
+      z-index: 5;
+      width: 130px;
+      height: 130px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffb300, #ffa000, #ffca28);
+      box-shadow: 0 0 30px #ffb74d, 0 0 60px #ffa726;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: rotateLogo 8s linear infinite, glowLogo 3s ease-in-out infinite alternate;
+    }
+
+    .logo span {
+      font-size: 2.5em;
+      color: white;
+      font-weight: bold;
+      text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+      animation: floatLogo 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes rotateLogo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes glowLogo { from { box-shadow: 0 0 25px #ffb74d, 0 0 40px #ffa726; } to { box-shadow: 0 0 45px #ff9800, 0 0 80px #ffc107; } }
+    @keyframes floatLogo { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+    /* === КОНТЕЙНЕР === */
+    .container {
+      position: relative;
+      z-index: 5;
+      text-align: center;
+      padding: 80px 20px;
+      animation: fadeInUp 1.5s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 2.4em;
+      color: #ff9800;
+      text-shadow: 0 0 15px #ffc107, 0 0 25px #ff9800;
+      animation: glowTitle 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowTitle {
+      from { text-shadow: 0 0 10px #ffc107, 0 0 20px #ffb74d; }
+      to { text-shadow: 0 0 25px #ff9800, 0 0 45px #ffc107; }
+    }
+
+    p {
+      color: #555;
+      font-size: 1.2em;
+      margin-bottom: 40px;
+      animation: fadeIn 2s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* === КНОПКИ === */
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+      animation: fadeIn 3s ease;
+    }
+
+    a.button {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      font-size: 1.1em;
+      background: linear-gradient(90deg, #ffb74d, #ff9800, #ffa726);
+      padding: 16px 20px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 10px #ffb74d, 0 0 30px #ff9800;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: float 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes float { from { transform: translateY(0px); } to { transform: translateY(-5px); } }
+
+    a.button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+      transition: all 0.5s;
+    }
+
+    a.button:hover::before { left: 100%; }
+    a.button:hover { transform: scale(1.05); box-shadow: 0 0 25px #ff9800, 0 0 60px #ffc107; }
+
+    footer {
+      margin-top: 60px;
+      color: #555;
+      font-size: 0.9em;
+      animation: fadeInUp 2.5s ease;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8em; }
+      p { font-size: 1em; }
+      a.button { font-size: 1em; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+
+  <div class="loader"><span>✨ Загрузка Biscvid...</span></div>
+
+  <div class="container">
+    <div class="logo"><span>B</span></div>
+    <h1>🤖 Biscvid — Чат Менеджер</h1>
+    <p>Анимированный, стильный и живой менеджер твоих чатов VK 🚀</p>
+
+    <div class="buttons">
+      <a href="https://vk.com/biscvid_managere" class="button">🌐 Biscvid — Чат Менеджер</a>
+      <a href="https://vk.com/app6441755_-230488466?ref=group_menu" class="button">⚙️ Подключить Biscvid</a>
+      <a href="https://vk.me/join/dtARsluJqX_S2phxAKEQkdpq0OoDDqjQnRo=" class="button">📢 Пиар чат Biscvid</a>
+      <a href="https://vk.me/join/rnoOP1leomxa3WFAh35Lci1CVN2QthILW04=" class="button">💬 Чат пользователей Biscvid</a>
+      <a href="https://whg88285.hgweb.ru" class="button">💻 Форум Biscvid</a>
+    </div>
+
+    <footer>© 2025 Biscvid — Чат Менеджер. Сделано с ❤️ и анимацией.</footer>
+  </div>
+
+  <script>
+    /* === ЭФФЕКТ ЧАСТИЦ === */
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      particlesArray = [];
+      init();
+    });
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 3 + 1;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+        this.color = `hsl(${Math.random() * 40 + 30}, 100%, 60%)`;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 15;
+        ctx.fill();
+      }
+    }
+
+    function init() {
+      for (let i = 0; i < 120; i++) {
+        particlesArray.push(new Particle());
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particlesArray.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+  </script>
+</body>
+  </html>
